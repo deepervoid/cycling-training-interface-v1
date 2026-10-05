@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#050505">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>Ride Trainer — 4×8 Threshold</title>
+<style>
+:root{
+  --bg:#050505; --panel:#101010; --panel2:#171717; --text:#f4f4f4; --muted:#9a9a9a;
+  --line:#2b2b2b; --green:#66e35f; --yellow:#ffd83d; --orange:#ff9d28;
+  --red:#ff5252; --blue:#54a8ff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#000;color:var(--text);font-family:Arial,Helvetica,sans-serif;width:100%;height:100%;min-height:100dvh;overflow:hidden}
+button{font:inherit;color:inherit;border:0}
+.app{height:100dvh;width:100%;display:flex;flex-direction:column;max-width:520px;margin:auto;background:var(--bg)}
+.top{height:58px;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);background:#080808}
+.brand{font-weight:900;letter-spacing:1.5px;font-size:15px}
+.status{display:flex;gap:12px;color:#bbb;font-size:12px;font-weight:700}
+.main{flex:1;min-height:0;display:flex;flex-direction:column;padding:10px;gap:9px}
+.stage-card{flex:1;min-height:250px;background:linear-gradient(180deg,#151515,#0d0d0d);border:1px solid var(--line);border-radius:13px;padding:13px;display:flex;flex-direction:column}
+.stage-head{display:flex;justify-content:space-between;align-items:flex-start}
+.badge{font-size:11px;font-weight:900;letter-spacing:1px;padding:6px 8px;border-radius:5px;background:#222}
+.stage-title{font-size:22px;font-weight:900;margin-top:10px}
+.stage-sub{color:var(--muted);font-size:13px;margin-top:4px}
+.timer{font-size:clamp(70px,18vw,145px);font-weight:900;line-height:.95;letter-spacing:-4px;text-align:center;margin:auto 0 8px;font-variant-numeric:tabular-nums}
+.timer small{font-size:22px;letter-spacing:0;color:var(--muted)}
+.bar{height:9px;background:#252525;border-radius:99px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--green);transition:width .2s linear}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.metric{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:9px 10px}
+.metric .label{font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.7px}
+.metric .value{font-size:20px;font-weight:900;margin-top:4px;font-variant-numeric:tabular-nums}
+.next{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:9px 11px;display:flex;justify-content:space-between;align-items:center}
+.next b{font-size:12px}.next span{color:#ddd;font-size:13px}
+.controls{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:7px}
+.controls button,.secondary button{background:#1c1c1c;border:1px solid #333;border-radius:9px;min-height:48px;font-weight:900}
+#startBtn{background:#d9d9d9;color:#050505;font-size:17px}
+.secondary{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.secondary button{font-size:11px}
+button:active{transform:scale(.98);background:#2b2b2b}
+.editor{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;z-index:10;padding:14px;overflow:auto}
+.editor.open{display:block}
+.sheet{max-width:700px;margin:auto;background:#111;border:1px solid #333;border-radius:13px;padding:14px}
+.sheet h2{margin:0 0 8px}.hint{color:#999;font-size:12px;margin-bottom:12px}
+.row{display:grid;grid-template-columns:1.6fr .8fr .8fr auto;gap:6px;margin:6px 0}
+.row input{background:#202020;color:#fff;border:1px solid #3a3a3a;border-radius:6px;padding:9px;min-width:0}
+.row button{background:#242424;border-radius:6px;padding:0 12px}
+.sheet-actions{display:flex;gap:7px;margin-top:12px}.sheet-actions button{flex:1;padding:12px;background:#222;border-radius:7px;font-weight:900}
+.save{background:#ddd!important;color:#000}
+@media(max-width:520px){.top{height:50px}.main{padding:7px;gap:6px}.stage-card{padding:10px}.stage-title{font-size:19px}.timer{font-size:clamp(64px,20vw,100px)}.metric .value{font-size:17px}.secondary button{min-height:42px}.controls button{min-height:48px}}
+
+/* Portrait-only riding layout */
+@media (orientation: landscape) {
+  .app { max-width: 520px; }
+}
+body { overscroll-behavior: none; }
+
+<style>
+#orientationNotice{
+  display:none;position:fixed;inset:0;z-index:9999;background:#050505;color:#fff;
+  align-items:center;justify-content:center;text-align:center;padding:28px;
+}
+#orientationNotice .box{max-width:320px}
+#orientationNotice .phone{font-size:54px;margin-bottom:15px}
+#orientationNotice h2{margin:0 0 8px;font-size:24px}
+#orientationNotice p{margin:0;color:#aaa;line-height:1.5}
+@media (orientation: landscape) and (max-height: 700px){
+  #orientationNotice{display:flex}
+  .app{visibility:hidden}
+}
+</style>
+</style>
+</head>
+<body>
+<div id="orientationNotice">
+  <div class="box">
+    <div class="phone">↻</div>
+    <h2>Portrait mode</h2>
+    <p>Turn your phone upright. Ride Trainer is designed for portrait use.</p>
+  </div>
+</div>
+<div class="app">
+<header class="top">
+  <div class="brand">RIDE TRAINER <span style="color:#777">/ 4×8</span></div>
+  <div class="status"><span id="clock">--:--</span><span>GPS —</span><span>BAT 100%</span></div>
+</header>
+
+<main class="main">
+  <section class="stage-card">
+    <div class="stage-head">
+      <div>
+        <div class="badge" id="phaseBadge">READY</div>
+        <div class="stage-title" id="stageTitle">Warm-up</div>
+        <div class="stage-sub" id="stageSub">Easy · Z1 → Z2</div>
+      </div>
+      <div style="text-align:right;color:#999;font-size:11px;font-weight:800" id="stageCount">1 / 22</div>
+    </div>
+    <div class="timer" id="timer">20:00</div>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+  </section>
+
+  <section class="metrics">
+    <div class="metric"><div class="label">Elapsed</div><div class="value" id="elapsed">00:00:00</div></div>
+    <div class="metric"><div class="label">Stage</div><div class="value" id="stageElapsed">00:00</div></div>
+    <div class="metric"><div class="label">Workout</div><div class="value" id="workoutPct">0%</div></div>
+  </section>
+
+  <section class="next">
+    <b>NEXT</b><span id="nextStage">Steady · 5:00</span>
+  </section>
+
+  <div class="controls">
+    <button id="prevBtn">◀ PREV</button>
+    <button id="startBtn">START</button>
+    <button id="nextBtn">NEXT ▶</button>
+  </div>
+
+  <div class="secondary">
+    <button id="restartBtn">↻ RESTART</button>
+    <button id="editBtn">✎ EDIT</button>
+    <button id="soundBtn">🔊 SOUND ON</button>
+    <button id="wakeBtn">☀ WAKE ON</button>
+  </div>
+</main>
+</div>
+
+<div class="editor" id="editor">
+ <div class="sheet">
+  <h2>Workout editor</h2>
+  <div class="hint">Edit duration/name/target. Changes are applied to the current workout. Use seconds or mm:ss.</div>
+  <div id="rows"></div>
+  <div class="sheet-actions">
+   <button id="addBtn">+ ADD STAGE</button>
+   <button id="cancelEdit">CANCEL</button>
+   <button class="save" id="saveEdit">SAVE</button>
+  </div>
+ </div>
+</div>
+
+<script>
+const base = [
+ ["Warm-up","Easy · Z1 → Z2",1200,"EASY"],
+ ["Steady","Comfortable Z2",300,"STEADY"],
+ ["Spin-up 1","30 sec · 110–120 rpm",30,"SPIN"],
+ ["Easy","1 min recovery",60,"EASY"],
+ ["Spin-up 2","30 sec · 110–120 rpm",30,"SPIN"],
+ ["Easy","1 min recovery",60,"EASY"],
+ ["Spin-up 3","30 sec · 110–120 rpm",30,"SPIN"],
+ ["Easy","4 min · very easy",240,"EASY"],
+ ["Threshold 1","8 min · RPE 7.5–8 · ~90–95% FTP",480,"HARD"],
+ ["Recovery 1","4 min · very easy",240,"EASY"],
+ ["Threshold 2","8 min · RPE 7.5–8 · ~90–95% FTP",480,"HARD"],
+ ["Recovery 2","4 min · very easy",240,"EASY"],
+ ["Threshold 3","8 min · RPE 7.5–8 · ~90–95% FTP",480,"HARD"],
+ ["Recovery 3","4 min · very easy",240,"EASY"],
+ ["Threshold 4","8 min · RPE 7.5–8 · ~90–95% FTP",480,"HARD"],
+ ["VO₂ 1","1 min · RPE 9 · hard, controlled",60,"VO2"],
+ ["Easy 1","2 min · very easy",120,"EASY"],
+ ["VO₂ 2","1 min · RPE 9 · hard, controlled",60,"VO2"],
+ ["Easy 2","2 min · very easy",120,"EASY"],
+ ["VO₂ 3","1 min · RPE 9 · hard, controlled",60,"VO2"],
+ ["Easy 3","2 min · very easy",120,"EASY"],
+ ["VO₂ 4","1 min · RPE 9 · hard, controlled",60,"VO2"],
+ ["Cool-down","10–15 min · Z1",600,"COOLDOWN"]
+];
+
+let stages = base.map(x=>({name:x[0],sub:x[1],dur:x[2],type:x[3]}));
+let idx=0, remaining=stages[0].dur, stageStarted=0, elapsed=0, running=false, last=0, sound=true, wake=true, wakeLock=null;
+
+const $=id=>document.getElementById(id);
+function fmt(s){s=Math.max(0,Math.round(s));let m=Math.floor(s/60),sec=s%60;return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`}
+function fmtH(s){s=Math.max(0,Math.round(s));let h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`}
+function total(){return stages.reduce((a,s)=>a+s.dur,0)}
+function colorType(t){return {EASY:"var(--green)",STEADY:"var(--green)",SPIN:"var(--yellow)",HARD:"var(--orange)",VO2:"var(--red)",COOLDOWN:"var(--green)"}[t]||"var(--green)"}
+function beep(pattern=[880,160]){
+ if(!sound)return;
+ try{const C=window.AudioContext||window.webkitAudioContext, c=new C(),o=c.createOscillator(),g=c.createGain();o.frequency.value=pattern[0];g.gain.value=.05;o.connect(g);g.connect(c.destination);o.start();setTimeout(()=>{o.stop();c.close()},pattern[1])}catch(e){}
+}
+function render(){
+ const s=stages[idx]; $("phaseBadge").textContent=s.type==="VO2"?"VERY HARD":s.type==="HARD"?"HARD":s.type==="SPIN"?"SPIN-UP":s.type==="COOLDOWN"?"COOLDOWN":s.type;
+ $("phaseBadge").style.color=colorType(s.type); $("phaseBadge").style.border=`1px solid ${colorType(s.type)}`;
+ $("stageTitle").textContent=s.name; $("stageSub").textContent=s.sub;
+ $("stageCount").textContent=`${idx+1} / ${stages.length}`;
+ $("timer").textContent=fmt(remaining);
+ $("fill").style.width=(Math.max(0,Math.min(1,(s.dur-remaining)/s.dur))*100)+"%";
+ $("fill").style.background=colorType(s.type);
+ $("stageElapsed").textContent=fmt(s.dur-remaining);
+ $("workoutPct").textContent=Math.round(workoutDone()/total()*100)+"%";
+ $("nextStage").textContent=idx<stages.length-1?`${stages[idx+1].name} · ${fmt(stages[idx+1].dur)}`:"FINISH";
+ $("startBtn").textContent=running?"PAUSE":(elapsed>0?"RESUME":"START");
+}
+function workoutDone(){return stages.slice(0,idx).reduce((a,s)=>a+s.dur,0)+(stages[idx].dur-remaining)}
+function go(n){
+ idx=Math.max(0,Math.min(stages.length-1,n)); remaining=stages[idx].dur; stageStarted=Date.now(); render(); beep([660,120]);
+}
+function restartStage(){remaining=stages[idx].dur;stageStarted=Date.now();render();beep([520,100])}
+function tick(now){
+ if(!last)last=now;
+ const dt=(now-last)/1000; last=now;
+ if(running){
+   elapsed+=dt; remaining-=dt;
+   if(remaining<=0){
+     if(idx<stages.length-1){idx++;remaining=stages[idx].dur;stageStarted=Date.now();beep([1040,180]);setTimeout(()=>beep([1320,120]),210)}
+     else{remaining=0;running=false;beep([700,300]);}
+   }
+   render();
+ }
+ requestAnimationFrame(tick);
+}
+$("startBtn").onclick=async()=>{
+  try{
+    if(document.documentElement.requestFullscreen && !document.fullscreenElement){
+      await document.documentElement.requestFullscreen();
+    }
+  }catch(e){}
+  await forcePortrait();
+  running=!running;if(running){beep([880,100]); if(wake && "wakeLock" in navigator){try{wakeLock=await navigator.wakeLock.request("screen")}catch(e){}}}else if(wakeLock){try{await wakeLock.release()}catch(e){}}render()}
+$("nextBtn").onclick=()=>go(idx+1);
+$("prevBtn").onclick=()=>go(idx-1);
+$("restartBtn").onclick=()=>{running=false;idx=0;remaining=stages[0].dur;elapsed=0;render();beep([500,100])};
+$("editBtn").onclick=()=>openEditor();
+$("soundBtn").onclick=()=>{sound=!sound;$("soundBtn").textContent=sound?"🔊 SOUND ON":"🔇 SOUND OFF";};
+$("wakeBtn").onclick=()=>{wake=!wake;$("wakeBtn").textContent=wake?"☀ WAKE ON":"☀ WAKE OFF"};
+function openEditor(){
+ $("rows").innerHTML="";
+ stages.forEach((s,i)=>{
+  const r=document.createElement("div");r.className="row";
+  r.innerHTML=`<input data-k="name" value="${esc(s.name)}"><input data-k="dur" value="${fmt(s.dur)}"><input data-k="sub" value="${esc(s.sub)}"><button data-del="${i}">×</button>`;
+  $("rows").appendChild(r);
+ });
+ $("editor").classList.add("open");
+}
+function esc(x){return String(x).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;")}
+$("rows").onclick=e=>{if(e.target.dataset.del!==undefined){stages.splice(+e.target.dataset.del,1);openEditor()}};
+$("addBtn").onclick=()=>{stages.push({name:"New stage",sub:"Set target",dur:60,type:"EASY"});openEditor()};
+$("cancelEdit").onclick=()=>$("editor").classList.remove("open");
+$("saveEdit").onclick=()=>{
+ const rows=[...$("rows").children];
+ stages=rows.map((r,i)=>{
+  const ins=[...r.querySelectorAll("input")];let d=ins[1].value.trim();
+  let parts=d.split(":").map(Number);let sec=parts.length===2?parts[0]*60+parts[1]:Number(d)||60;
+  let name=ins[0].value||"Stage", sub=ins[2].value||"";
+  let old=stages[i]||{type:"EASY"};
+  return {name,sub,dur:Math.max(1,sec),type:infer(name,sub,old.type)}
+ });
+ idx=Math.min(idx,stages.length-1);remaining=stages[idx].dur;$("editor").classList.remove("open");render();
+};
+function infer(n,sub,old){let x=(n+" "+sub).toLowerCase();if(x.includes("vo₂")||x.includes("vo2"))return"VO2";if(x.includes("threshold")||x.includes("hard"))return"HARD";if(x.includes("spin"))return"SPIN";if(x.includes("cool"))return"COOLDOWN";return old||"EASY"}
+setInterval(()=>{let d=new Date();$("clock").textContent=d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});},1000);
+document.addEventListener("visibilitychange",async()=>{if(document.visibilityState==="visible"&&running&&wake&&"wakeLock"in navigator){try{wakeLock=await navigator.wakeLock.request("screen")}catch(e){}}});
+render();requestAnimationFrame(tick);
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+}
+</script>
+
+<script>
+/* Portrait mode: request the Android screen orientation when supported.
+   Installed PWAs can honor this directly; browsers may require a user gesture. */
+async function forcePortrait(){
+  try{
+    if(screen.orientation && screen.orientation.lock){
+      await screen.orientation.lock("portrait");
+    }
+  }catch(e){}
+}
+window.addEventListener("load", forcePortrait);
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState === "visible") forcePortrait();
+});
+document.addEventListener("fullscreenchange", forcePortrait);
+</script>
+</body>
+</html>
